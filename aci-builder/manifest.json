@@ -1,7 +1,7 @@
 {
     "acKind": "ImageManifest",
     "acVersion": "0.7.4",
-    "name": "blablacar.github.io/dgr/aci-builder",
+    "name": "blitznote.com/aci/dgr-builder",
     "labels": [
         {
             "name": "arch",

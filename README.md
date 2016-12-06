@@ -553,7 +553,7 @@ If you want want to extend the way the **builder** is working (attributes, templ
 ```
 ...
 builder:
-  image: blablacar.github.io/dgr/aci-builder:1
+  image: blitznote.com/aci/dgr-builder
 ...
 ```
 You can do the same for the **tester**.

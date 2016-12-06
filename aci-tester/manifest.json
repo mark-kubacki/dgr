@@ -32,7 +32,7 @@
     ],
     "dependencies": [
         {
-            "imageName": "blablacar.github.io/dgr/aci-builder",
+            "imageName": "blitznote.com/aci/dgr-builder",
             "labels": [
                 {
                     "name": "os",

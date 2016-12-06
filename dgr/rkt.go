@@ -12,7 +12,7 @@ import (
 	"github.com/n0rad/go-erlog/logs"
 )
 
-var aciBuilder = common.NewACFullName("blablacar.github.io/dgr/aci-builder")
+var aciBuilder = common.NewACFullName("blitznote.com/aci/dgr-builder")
 var aciTester = common.NewACFullName("blablacar.github.io/dgr/aci-tester")
 var importMutex = sync.Mutex{}
 var builderImported = false
