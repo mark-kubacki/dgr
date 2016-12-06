@@ -94,9 +94,7 @@ func WriteAciManifest(m *AciManifest, targetFile string, projectName string, dgr
 	im := schema.BlankImageManifest()
 	im.Annotations = m.Aci.Annotations
 
-	dgrVersionIdentifier, _ := types.NewACIdentifier(ManifestDrgVersion)
 	buildDateIdentifier, _ := types.NewACIdentifier("build-date")
-	im.Annotations.Set(*dgrVersionIdentifier, dgrVersion)
 	im.Annotations.Set(*buildDateIdentifier, time.Now().Format(time.RFC3339))
 	im.Dependencies, err = ToAppcDependencies(m.Aci.Dependencies)
 	if err != nil {

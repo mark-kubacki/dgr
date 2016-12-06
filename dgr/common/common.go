@@ -21,8 +21,6 @@ const EnvCatchOnStep = "CATCH_ON_STEP"
 const EnvBuilderCommand = "BUILDER_COMMAND"
 const PrefixBuilder = "builder/"
 
-const ManifestDrgVersion = "dgr-version"
-
 type BuilderCommand string
 
 const (

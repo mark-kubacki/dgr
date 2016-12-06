@@ -5,10 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 
-	"github.com/appc/spec/schema"
 	"github.com/blablacar/dgr/dgr/common"
 	"github.com/jhoonb/archivex"
 	gzip "github.com/klauspost/pgzip"
@@ -149,22 +147,8 @@ func (aci *Aci) zipAci() error {
 func (aci *Aci) checkCompatibilityVersions() {
 	defer aci.checkWg.Done()
 	for _, dep := range aci.manifest.Aci.Dependencies {
-		depFields := aci.fields.WithField("dependency", dep.String())
-
 		logs.WithF(aci.fields).WithField("dependency", dep.String()).Info("Fetching dependency")
 		Home.Rkt.Fetch(dep.String())
-		version, err := GetDependencyDgrVersion(dep)
-		if err != nil {
-			logs.WithEF(err, depFields).Error("Failed to check compatibility version of dependency")
-		} else {
-			if version < 55 {
-				logs.WithF(aci.fields).
-					WithField("dependency", dep).
-					WithField("require", ">=55").
-					Error("dependency was not build with a compatible version of dgr")
-			}
-		}
-
 	}
 }
 
@@ -188,30 +172,6 @@ func CheckLatestVersion(deps []common.ACFullname, warnText string) {
 				Warn("Newer " + warnText + " version")
 		}
 	}
-}
-
-func GetDependencyDgrVersion(acName common.ACFullname) (int, error) {
-	depFields := data.WithField("dependency", acName.String())
-
-	out, err := Home.Rkt.CatManifest(acName.String())
-	if err != nil {
-		return 0, errs.WithEF(err, depFields, "Dependency not found")
-	}
-
-	im := schema.ImageManifest{}
-	if err := im.UnmarshalJSON([]byte(out)); err != nil {
-		return 0, errs.WithEF(err, depFields.WithField("content", out), "Cannot read manifest cat by rkt image")
-	}
-
-	version, ok := im.Annotations.Get(common.ManifestDrgVersion)
-	var val int
-	if ok {
-		val, err = strconv.Atoi(version)
-		if err != nil {
-			return 0, errs.WithEF(err, depFields.WithField("version", version), "Failed to parse "+common.ManifestDrgVersion+" from manifest")
-		}
-	}
-	return val, nil
 }
 
 func (aci *Aci) giveBackUserRightsToTarget() {
