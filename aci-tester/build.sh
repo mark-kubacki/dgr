@@ -19,7 +19,9 @@ wget -O ${rootfs}/dgr/usr/bin/bats-preprocess https://raw.githubusercontent.com/
 
 chmod +x ${rootfs}/dgr/usr/bin/*
 
+: ${tar:="$(realpath "${dir}/../aci-builder/files/dgr/usr/bin/tar")"}
 cd ${target}
-tar --sort=name --numeric-owner -cpzf ../bindata/aci-tester.aci manifest rootfs \
-|| tar -cpzf ../bindata/aci-tester.aci manifest rootfs
+"${tar}" --sort=name --numeric-owner \
+  --owner=0 --group=0 \
+  -cpzf ../bindata/aci-tester.aci manifest rootfs
 cd -
