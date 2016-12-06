@@ -31,7 +31,7 @@ Usage: gomake [-v version] command...
   -W, --work-path=path      set working path, default is ./
 EOF
 
-go_files=`find . -name '*.go' 2> /dev/null | grep -v ${target_name}/ | grep -v vendor/ | grep -v .git`
+go_files=$(find . -type f -name '*.go' -not -path "./_*" -not -path "./vendor/*")
 err_count=0
 
 #color_red() {
