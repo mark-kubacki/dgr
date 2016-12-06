@@ -4,18 +4,16 @@ set -e
  : ${target_name:=dist}
  : ${work_path:=.}
  : ${app:=$(basename $(cd "${work_path}"; pwd))}
- : ${repo:=$(git config --get remote.origin.url | sed -n 's/.*@\(.*\)\.git/\1/p' | tr : /)}
  : ${osarchi:="$(go env GOHOSTOS)-$(go env GOHOSTARCH)"}
  : ${release_osarchi:="linux-amd64,darwin-amd64,windows-amd64"}
  : ${version:=0}
- : ${token:=}
  : ${upx:=}
  : ${build_packages:=}
  : ${build_ldflags:="-s -w -X main.BuildTime=`date -u '+%Y-%m-%d_%H:%M:%S_UTC'` -X main.BuildVersion=\${version} -X main.BuildCommit=`git rev-parse --short HEAD`"}
  : ${errcheck:=1}
 
 read -d '' helper <<EOF || true
-Usage: gomake [-v version][-t token] command...
+Usage: gomake [-v version] command...
   gomake is a script to build go apps
 
   command
@@ -24,14 +22,12 @@ Usage: gomake [-v version][-t token] command...
       quality               Format, Fix, check error handled, lint, vet, misspell, ineffassign, Gocyclo
       test                  run go tests
       install               install release to \$GOPATH/bin
-      release               clean, build all platform, test, check git is clean, tag, push tag & build ZIPs
       gomake_update         self updating by downloading and replacing with latest version
 
          default is 'clean build test quality'
 
   -v, --version=version     version of the app
   -h, --help                this helper
-  -t, --token=token         token to push releases
   -W, --work-path=path      set working path, default is ./
 EOF
 
@@ -205,53 +201,6 @@ require_clean_work_tree() {
     fi
 }
 
-release() {
-    start=`date +%s`
-    if [ "${repo%%/*}" != "github.com" ]; then
-        echo "Push to '${repo%%/*}' not implemented"
-        exit 1
-    fi
-    if [ -z "${version}" ] || [ "${version}" == "0" ]; then
-        echo_red "please set version to release"
-        exit 1
-    fi
-    if [ -z "${token}" ]; then
-        echo_red "please set token to release"
-        exit 1
-    fi
-
-    github_repo=${repo#*/}
-
-    clean
-    build ${release_osarchi}
-    test
-    quality
-    require_clean_work_tree
-
-    echo_green "Compress release"
-    cd ${work_path}/${target_name}
-    for i in *-* ; do
-        if [ -d "$i" ]; then
-            tar czf ${i}.tar.gz ${i}
-        fi
-    done
-    cd -
-
-    git tag v${version} -a -m "Version $version"
-    git push --tags
-
-    sleep 5
-
-    posturl=$(curl --data "{\"tag_name\": \"v${version}\",\"target_commitish\": \"master\",\"name\": \"v${version}\",\"body\": \"Release of version ${version}\",\"draft\": false,\"prerelease\": false}" https://api.github.com/repos/${github_repo}/releases?access_token=${token} | grep "\"upload_url\"" | sed -ne 's/.*\(http[^"]*\).*/\1/p')
-
-    for i in ${work_path}/${target_name}/*.tar.gz ; do
-        fullpath=$(ls ${i})
-        filename=${fullpath##*/}
-        curl -i -X POST -H "Content-Type: application/x-gzip" --data-binary "@${fullpath}" "${posturl%\{?name,label\}}?name=${filename}&label=${filename}&access_token=${token}"
-    done
-    echo_purple "Release duration : $((`date +%s`-${start}))s"
-}
-
 test() {
     start=`date +%s`
     echo_green "Testing"
@@ -274,10 +223,8 @@ while [ $# -gt 0 ]; do
     case "${1}" in
         -h|--help)  echo "${helper}"; exit 0;;
         --version=*)version="${1#*=}"; shift;;
-        --token=*)  token="${1#*=}"; shift;;
         --work-path=*) work_path="${1#*=}"; shift;;
         -v)         version="${2}"; [ $# -gt 1 ] || (echo_red "Missing argument for ${1}"; exit 1); shift 2;;
-        -t)         token="${2}"; [ $# -gt 1 ] || (echo_red "Missing argument for ${1}"; exit 1); shift 2;;
         -W)         work_path="${2}"; [ $# -gt 1 ] || (echo_red "Missing argument for ${1}"; exit 1); shift 2;;
         --)         shift; commands+=("${@}"); break;;
         *)          commands+=("${1}"); shift;;
@@ -294,7 +241,7 @@ fi
 command_count=0
 for i in "${commands[@]}"; do
     case ${i} in
-        test|build|release|clean|quality|install|gomake_update) ${i}; ((++command_count));;
+        test|build|clean|quality|install|gomake_update) ${i}; ((++command_count));;
         *)                                              echo_red "Unknown command '${i}'"; echo ${helper}; exit 1;;
     esac
 done
