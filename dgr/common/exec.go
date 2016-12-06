@@ -58,7 +58,6 @@ func ExecCmd(head string, parts ...string) error {
 	}
 	cmd := exec.Command(head, parts...)
 	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
