@@ -7,7 +7,7 @@ set -e
  : ${osarchi:="$(go env GOHOSTOS)-$(go env GOHOSTARCH)"}
  : ${release_osarchi:="linux-amd64,darwin-amd64,windows-amd64"}
  : ${version:="$(git -C . describe --abbrev=0 --tags HEAD | tr -d 'v')"}
- : ${upx:=}
+ : ${upx:="$(command -v upx 2>/dev/null)"}
  : ${build_packages:=}
  : ${build_ldflags:="-s -w -X main.BuildTime=`date -u '+%Y-%m-%d_%H:%M:%S_UTC'` -X main.BuildVersion=\${version} -X main.BuildCommit=`git rev-parse --short HEAD`"}
  : ${errcheck:=1}
@@ -112,10 +112,9 @@ build() {
         binaryPath=$(targetBinaryPath ${e})
         $(cd ${work_path} && GOOS="${e%-*}" GOARCH="${e#*-}" go build -ldflags "${ldflags}" -o ${target_name}/${binaryPath} ${build_packages})
 
-        if [ ${upx} ]; then
+        if [[ "${upx}" ]]; then
             echo_green "Compressing ${e}"
-            [ -f /usr/bin/upx ] || (echo "upx is required to compress" && exit 1)
-            upx ${work_path}/${target_name}/${binaryPath} &> /dev/null
+            "${upx}" ${work_path}/${target_name}/${binaryPath} &>/dev/null
         fi
 
         if [ "${e%-*}" == "windows" ]; then
