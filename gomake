@@ -6,7 +6,7 @@ set -e
  : ${app:=$(basename $(cd "${work_path}"; pwd))}
  : ${osarchi:="$(go env GOHOSTOS)-$(go env GOHOSTARCH)"}
  : ${release_osarchi:="linux-amd64,darwin-amd64,windows-amd64"}
- : ${version:="$(git -C . describe --abbrev=0 --tags HEAD | tr -d 'v')"}
+ : ${version:="$[$(git -C . describe --abbrev=0 --tags HEAD | tr -d 'v') + 1]-dev"}
  : ${upx:="$(command -v upx 2>/dev/null)"}
  : ${build_packages:=}
  : ${build_ldflags:="-s -w -X main.BuildTime=`date -u '+%Y-%m-%d_%H:%M:%S_UTC'` -X main.BuildVersion=\${version} -X main.BuildCommit=`git rev-parse --short HEAD`"}
