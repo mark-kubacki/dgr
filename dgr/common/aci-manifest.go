@@ -94,8 +94,10 @@ func WriteAciManifest(m *AciManifest, targetFile string, projectName string, dgr
 	im := schema.BlankImageManifest()
 	im.Annotations = m.Aci.Annotations
 
-	buildDateIdentifier, _ := types.NewACIdentifier("build-date")
-	im.Annotations.Set(*buildDateIdentifier, time.Now().Format(time.RFC3339))
+	if _, ok := im.Annotations.Get("build-date"); !ok {
+		buildDateIdentifier, _ := types.NewACIdentifier("build-date")
+		im.Annotations.Set(*buildDateIdentifier, time.Now().Format(time.RFC3339))
+	}
 	im.Dependencies, err = ToAppcDependencies(m.Aci.Dependencies)
 	if err != nil {
 		return errs.WithEF(err, fields, "Failed to prepare dependencies for manifest")
