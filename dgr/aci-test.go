@@ -146,7 +146,6 @@ func (aci *Aci) buildTestAci() (string, error) {
 				SupplementaryGIDs: aci.manifest.Aci.App.SupplementaryGIDs,
 				Environment:       aci.manifest.Aci.App.Environment,
 				Ports:             aci.manifest.Aci.App.Ports,
-				Isolators:         aci.manifest.Aci.App.Isolators,
 			},
 			Dependencies:  append(aci.manifest.Tester.Aci.Dependencies, *common.NewACFullName(name[len(prefixTest):])),
 			Annotations:   aci.manifest.Aci.Annotations,
