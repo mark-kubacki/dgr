@@ -1,11 +1,13 @@
 package common
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -69,6 +71,14 @@ func ExtractNameVersionFromManifest(im *schema.ImageManifest) *ACFullname {
 		name += ":" + val
 	}
 	return NewACFullName(name)
+}
+
+// prettifyJSON improves legibility of a JSON manifest file
+// by inserting and removing whitespace.
+func prettifyJSON(content []byte) []byte {
+	re := regexp.MustCompile(`{\s*("name":[^\n]*),\n\s*([^\n]+)\n\s*}`)
+	t := re.ReplaceAll(content, []byte("{$1, $2}"))
+	return t
 }
 
 func WriteAciManifest(m *AciManifest, targetFile string, projectName string, dgrVersion string) error {
@@ -137,10 +147,15 @@ collectionIsComplete:
 		Ports:             m.Aci.App.Ports,
 		Isolators:         m.Aci.App.Isolators,
 	}
-	buff, err := json.MarshalIndent(im, "", "  ")
-	if err != nil {
+
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if enc.Encode(im) != nil {
 		return errs.WithEF(err, fields.WithField("object", im), "Failed to marshal manifest")
 	}
+	buff := prettifyJSON(b.Bytes())
 	err = ioutil.WriteFile(targetFile, buff, 0644)
 	if err != nil {
 		return errs.WithEF(err, fields.WithField("file", targetFile), "Failed to write manifest file")
